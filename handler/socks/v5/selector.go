@@ -71,6 +71,7 @@ func (s *serverSelector) OnSelected(method uint8, conn net.Conn) (string, net.Co
 		if s.Authenticator != nil {
 			var ok bool
 			ctx := ctxvalue.ContextWithClientAddr(context.Background(), ctxvalue.ClientAddr(conn.RemoteAddr().String()))
+			ctx = ctxvalue.ContextWithHandler(ctx, ctxvalue.Handler("socks5"))
 			id, ok = s.Authenticator.Authenticate(ctx, req.Username, req.Password)
 			if !ok {
 				resp := gosocks5.NewUserPassResponse(gosocks5.UserPassVer, gosocks5.Failure)

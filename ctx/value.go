@@ -64,6 +64,22 @@ func HashFromContext(ctx context.Context) *Hash {
 	return nil
 }
 
+type handlerKey struct{}
+type Handler string
+
+var (
+	keyHandler = &handlerKey{}
+)
+
+func ContextWithHandler(ctx context.Context, handler Handler) context.Context {
+	return context.WithValue(ctx, keyHandler, handler)
+}
+
+func HandlerFromContext(ctx context.Context) Handler {
+	v, _ := ctx.Value(keyHandler).(Handler)
+	return v
+}
+
 type clientIDKey struct{}
 type ClientID string
 

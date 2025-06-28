@@ -202,6 +202,7 @@ func (h *relayHandler) Handle(ctx context.Context, conn net.Conn, opts ...handle
 	}
 
 	if h.options.Auther != nil {
+		ctx = ctxvalue.ContextWithHandler(ctx, ctxvalue.Handler("relay"))
 		clientID, ok := h.options.Auther.Authenticate(ctx, user, pass)
 		if !ok {
 			resp.Status = relay.StatusUnauthorized

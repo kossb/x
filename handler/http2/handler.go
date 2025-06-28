@@ -363,6 +363,7 @@ func (h *http2Handler) authenticate(ctx context.Context, w http.ResponseWriter, 
 	if h.options.Auther == nil {
 		return "", true
 	}
+	ctx = ctxvalue.ContextWithHandler(ctx, ctxvalue.Handler("http2"))
 	if id, ok = h.options.Auther.Authenticate(ctx, u, p); ok {
 		return
 	}

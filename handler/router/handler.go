@@ -210,6 +210,7 @@ func (h *routerHandler) Handle(ctx context.Context, conn net.Conn, opts ...handl
 	}
 
 	if h.options.Auther != nil {
+		ctx = ctxvalue.ContextWithHandler(ctx, ctxvalue.Handler("router"))
 		clientID, ok := h.options.Auther.Authenticate(ctx, user, pass)
 		if !ok {
 			resp.Status = relay.StatusUnauthorized

@@ -855,6 +855,7 @@ func (h *httpHandler) authenticate(ctx context.Context, conn net.Conn, req *http
 	if h.options.Auther == nil {
 		return "", true
 	}
+	ctx = ctxvalue.ContextWithHandler(ctx, ctxvalue.Handler("http"))
 	if id, ok = h.options.Auther.Authenticate(ctx, u, p); ok {
 		return
 	}
