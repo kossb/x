@@ -10,6 +10,7 @@ import (
 	ctxvalue "github.com/go-gost/x/ctx"
 	"github.com/go-gost/x/internal/plugin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type grpcPlugin struct {
@@ -49,6 +50,14 @@ func NewGRPCPlugin(name string, addr string, opts ...plugin.Option) auth.Authent
 func (p *grpcPlugin) Authenticate(ctx context.Context, user, password string, opts ...auth.Option) (string, bool) {
 	if p.client == nil {
 		return "", false
+	}
+
+	handler := ctxvalue.HandlerFromContext(ctx)
+	if handler != "" {
+		md := metadata.New(map[string]string{
+			"handler-type": string(handler),
+		})
+		ctx = metadata.NewOutgoingContext(ctx, md)
 	}
 
 	r, err := p.client.Authenticate(ctx,
