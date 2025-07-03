@@ -116,18 +116,24 @@ func (r *Router) dial(ctx context.Context, network, address string, log logger.L
 		if r.options.Chain != nil {
 			route = r.options.Chain.Route(ctx, network, ipAddr, chain.WithHostRouteOption(address))
 		}
+		if len(route.Nodes()) == 0 {
+			log.Debugf("route nodes not found")
+			continue
+		}
 
 		if buf == nil {
 			buf = &bytes.Buffer{}
 		}
 		for _, node := range routePath(route) {
-			fmt.Fprintf(buf, "%s@%s > ", node.Name, node.Addr)
+			fmt.Fprintf(buf, "%s", node.Name)
 		}
-		fmt.Fprintf(buf, "%s", ipAddr)
 		log.Debugf("route(retry=%d) %s", i, buf.String())
 
 		if route == nil {
-			route = DefaultRoute
+			log.Debugf("route not found")
+			continue
+			// return nil, errors.New("route not found")
+			// route = DefaultRoute
 		}
 		conn, err = route.Dial(ctx, network, ipAddr,
 			chain.InterfaceDialOption(r.options.IfceName),

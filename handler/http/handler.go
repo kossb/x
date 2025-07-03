@@ -188,7 +188,29 @@ func (h *httpHandler) Handle(ctx context.Context, conn net.Conn, opts ...handler
 
 	conn = xnet.NewReadWriteConn(br, conn, conn)
 
-	return h.handleRequest(ctx, conn, req, ro, log)
+	err = h.handleRequest(ctx, conn, req, ro, log)
+	if err != nil {
+		_, errWrite := io.WriteString(conn, "HTTP/1.1 400 Bad Request\r\n")
+		if errWrite != nil {
+			return
+		}
+		_, errWrite = io.WriteString(conn, "Content-Length: "+strconv.Itoa(len(err.Error()))+"\r\n")
+		if errWrite != nil {
+			return
+		}
+
+		_, errWrite = io.WriteString(conn, err.Error()+"\r\n")
+		if errWrite != nil {
+			return
+		}
+		_, errWrite = io.WriteString(conn, "Connection: close\r\n")
+		if errWrite != nil {
+			return
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (h *httpHandler) Close() error {
@@ -351,6 +373,9 @@ func (h *httpHandler) handleRequest(ctx context.Context, conn net.Conn, req *htt
 		}
 		resp.Write(conn)
 		return err
+	}
+	if cc == nil {
+		return errors.New("connection with node not found")
 	}
 	defer cc.Close()
 

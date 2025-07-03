@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -73,6 +74,9 @@ func (h *socks5Handler) handleConnect(ctx context.Context, conn net.Conn, networ
 		log.Trace(resp)
 		resp.Write(conn)
 		return err
+	}
+	if cc == nil {
+		return errors.New("connection with node not found")
 	}
 	defer cc.Close()
 
