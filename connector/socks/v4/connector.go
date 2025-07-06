@@ -20,6 +20,22 @@ func init() {
 	registry.ConnectorRegistry().Register("socks4a", NewConnector)
 }
 
+// socks4ReplyError maps SOCKS4 reply codes to meaningful error messages
+func socks4ReplyError(code uint8) error {
+	switch code {
+	case gosocks4.Granted:
+		return nil
+	case gosocks4.Rejected:
+		return errors.New("request rejected or failed")
+	case gosocks4.RejectedUserid:
+		return errors.New("request rejected because the client program and identd report different user-ids")
+	case gosocks4.Failed:
+		return errors.New("request failed")
+	default:
+		return fmt.Errorf("unknown SOCKS4 reply code: 0x%02x", code)
+	}
+}
+
 type socks4Connector struct {
 	md      metadata
 	options connector.Options
@@ -116,8 +132,11 @@ func (c *socks4Connector) Connect(ctx context.Context, conn net.Conn, network, a
 	log.Trace(reply)
 
 	if reply.Code != gosocks4.Granted {
-		err = errors.New("host unreachable")
-		log.Error(err)
+		err = socks4ReplyError(reply.Code)
+		log.WithFields(map[string]any{
+			"reply_code": fmt.Sprintf("0x%02x", reply.Code),
+			"target":     address,
+		}).Error(err)
 		return nil, err
 	}
 

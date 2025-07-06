@@ -24,7 +24,11 @@ func (p *tcpListener) Accept() (net.Conn, error) {
 	p.logger.Trace(rep)
 
 	if rep.Rep != gosocks5.Succeeded {
-		return nil, fmt.Errorf("peer connect failed")
+		err = socks5ReplyError(rep.Rep)
+		p.logger.WithFields(map[string]any{
+			"reply_code": fmt.Sprintf("0x%02x", rep.Rep),
+		}).Error(err)
+		return nil, fmt.Errorf("peer connect failed: %w", err)
 	}
 
 	raddr, err := net.ResolveTCPAddr("tcp", rep.Addr.String())
@@ -77,8 +81,11 @@ func (p *tcpMuxListener) getPeerConn(conn net.Conn) (net.Conn, error) {
 	p.logger.Trace(rep)
 
 	if rep.Rep != gosocks5.Succeeded {
-		err = fmt.Errorf("peer connect failed")
-		return nil, err
+		err = socks5ReplyError(rep.Rep)
+		p.logger.WithFields(map[string]any{
+			"reply_code": fmt.Sprintf("0x%02x", rep.Rep),
+		}).Error(err)
+		return nil, fmt.Errorf("peer connect failed: %w", err)
 	}
 
 	raddr, err := net.ResolveTCPAddr("tcp", rep.Addr.String())

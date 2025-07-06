@@ -92,6 +92,32 @@ func (c *socks5Connector) Handshake(ctx context.Context, conn net.Conn) (net.Con
 	return cc, nil
 }
 
+// socks5ReplyError maps SOCKS5 reply codes to meaningful error messages
+func socks5ReplyError(code uint8) error {
+	switch code {
+	case gosocks5.Succeeded:
+		return nil
+	case 0x01:
+		return errors.New("general SOCKS server failure")
+	case 0x02:
+		return errors.New("connection not allowed by ruleset")
+	case 0x03:
+		return errors.New("network unreachable")
+	case 0x04:
+		return errors.New("host unreachable")
+	case 0x05:
+		return errors.New("connection refused")
+	case 0x06:
+		return errors.New("TTL expired")
+	case 0x07:
+		return errors.New("command not supported")
+	case 0x08:
+		return errors.New("address type not supported")
+	default:
+		return fmt.Errorf("unknown SOCKS5 reply code: 0x%02x", code)
+	}
+}
+
 func (c *socks5Connector) Connect(ctx context.Context, conn net.Conn, network, address string, opts ...connector.ConnectOption) (net.Conn, error) {
 	log := c.options.Logger.WithFields(map[string]any{
 		"remote":  conn.RemoteAddr().String(),
@@ -152,8 +178,12 @@ func (c *socks5Connector) Connect(ctx context.Context, conn net.Conn, network, a
 	log.Trace(reply)
 
 	if reply.Rep != gosocks5.Succeeded {
-		err = errors.New("host unreachable")
-		log.Error(err)
+		err = socks5ReplyError(reply.Rep)
+
+		// Enhanced diagnostic logging
+		diagnosticInfo := DiagnoseSocks5Error(reply.Rep, address, network)
+		LogDiagnosticInfo(log, diagnosticInfo)
+
 		return nil, err
 	}
 
@@ -186,7 +216,12 @@ func (c *socks5Connector) connectUDP(ctx context.Context, conn net.Conn, network
 	log.Trace(reply)
 
 	if reply.Rep != gosocks5.Succeeded {
-		return nil, errors.New("get socks5 UDP tunnel failure")
+		err = socks5ReplyError(reply.Rep)
+		log.WithFields(map[string]any{
+			"reply_code": fmt.Sprintf("0x%02x", reply.Rep),
+			"target":     address,
+		}).Error(err)
+		return nil, fmt.Errorf("UDP tunnel setup failed: %w", err)
 	}
 
 	return socks.UDPTunClientConn(conn, addr), nil
@@ -208,7 +243,12 @@ func (c *socks5Connector) relayUDP(ctx context.Context, conn net.Conn, addr net.
 	log.Trace(reply)
 
 	if reply.Rep != gosocks5.Succeeded {
-		return nil, errors.New("get socks5 UDP tunnel failure")
+		err = socks5ReplyError(reply.Rep)
+		log.WithFields(map[string]any{
+			"reply_code": fmt.Sprintf("0x%02x", reply.Rep),
+			"target":     addr.String(),
+		}).Error(err)
+		return nil, fmt.Errorf("UDP relay setup failed: %w", err)
 	}
 
 	log.Debugf("bind on: %v", reply.Addr)

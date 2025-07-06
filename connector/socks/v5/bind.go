@@ -111,7 +111,13 @@ func (l *socks5Connector) bind(conn net.Conn, cmd uint8, network, address string
 	log.Trace(reply)
 
 	if reply.Rep != gosocks5.Succeeded {
-		return nil, fmt.Errorf("bind on %s/%s failed", address, network)
+		err = socks5ReplyError(reply.Rep)
+		log.WithFields(map[string]any{
+			"reply_code": fmt.Sprintf("0x%02x", reply.Rep),
+			"target":     address,
+			"network":    network,
+		}).Error(err)
+		return nil, fmt.Errorf("bind on %s/%s failed: %w", address, network, err)
 	}
 
 	var baddr net.Addr
