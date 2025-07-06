@@ -83,7 +83,7 @@ func (r *Router) record(ctx context.Context, name string, data []byte) error {
 func (r *Router) dial(ctx context.Context, network, address string, log logger.Logger) (conn net.Conn, err error) {
 	count := r.options.Retries + 1
 	if count <= 0 {
-		count = 1
+		count = 3
 	}
 
 	log.Debugf("dial %s/%s", address, network)
@@ -93,6 +93,10 @@ func (r *Router) dial(ctx context.Context, network, address string, log logger.L
 		if r.options.Timeout > 0 {
 			var cancel context.CancelFunc
 			ctx, cancel = context.WithTimeout(ctx, r.options.Timeout)
+			defer cancel()
+		} else {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, 60*time.Second)
 			defer cancel()
 		}
 

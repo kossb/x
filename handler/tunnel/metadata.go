@@ -31,17 +31,20 @@ type metadata struct {
 	sniffingWebsocket           bool
 	sniffingWebsocketSampleRate float64
 
-	directTunnel           bool
-	tunnelTTL              time.Duration
-	ingress                ingress.Ingress
-	sd                     sd.SD
-	muxCfg                 *mux.Config
+	directTunnel bool
+	tunnelTTL    time.Duration
+	ingress      ingress.Ingress
+	sd           sd.SD
+	muxCfg       *mux.Config
 
 	observerPeriod       time.Duration
 	observerResetTraffic bool
 
 	limiterRefreshInterval time.Duration
 	limiterCleanupInterval time.Duration
+
+	tunnelTimeout time.Duration
+	tunnelRetries int
 }
 
 func (h *tunnelHandler) parseMetadata(md mdata.Metadata) (err error) {
@@ -120,6 +123,16 @@ func (h *tunnelHandler) parseMetadata(md mdata.Metadata) (err error) {
 
 	h.md.limiterRefreshInterval = mdutil.GetDuration(md, "limiter.refreshInterval")
 	h.md.limiterCleanupInterval = mdutil.GetDuration(md, "limiter.cleanupInterval")
+
+	h.md.tunnelTimeout = mdutil.GetDuration(md, "tunnel.timeout")
+	if h.md.tunnelTimeout <= 0 {
+		h.md.tunnelTimeout = 30 * time.Second
+	}
+
+	h.md.tunnelRetries = mdutil.GetInt(md, "tunnel.retries")
+	if h.md.tunnelRetries <= 0 {
+		h.md.tunnelRetries = 3
+	}
 
 	return
 }

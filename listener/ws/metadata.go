@@ -9,8 +9,12 @@ import (
 )
 
 const (
-	defaultPath    = "/ws"
-	defaultBacklog = 128
+	defaultPath              = "/ws"
+	defaultBacklog           = 1024
+	defaultReadBufferSize    = 4096
+	defaultWriteBufferSize   = 4096
+	defaultHandshakeTimeout  = 30 * time.Second
+	defaultReadHeaderTimeout = 10 * time.Second
 )
 
 type metadata struct {

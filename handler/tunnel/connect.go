@@ -75,8 +75,8 @@ func (h *tunnelHandler) handleConnect(ctx context.Context, req *relay.Request, c
 		node:    h.id,
 		pool:    h.pool,
 		sd:      h.md.sd,
-		retry:   3,
-		timeout: 15 * time.Second,
+		retry:   h.md.tunnelRetries,
+		timeout: h.md.tunnelTimeout,
 		log:     log,
 	}
 	cc, node, cid, err := d.Dial(ctx, network, tid.String())

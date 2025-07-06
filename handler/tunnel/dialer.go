@@ -21,7 +21,7 @@ type Dialer struct {
 func (d *Dialer) Dial(ctx context.Context, network string, tid string) (conn net.Conn, node string, cid string, err error) {
 	retry := d.retry
 	if retry <= 0 {
-		retry = 1
+		retry = 3 // Increased default from 1 to 3 for better reliability under load
 	}
 
 	for i := 0; i < retry; i++ {
@@ -70,8 +70,13 @@ func (d *Dialer) Dial(ctx context.Context, network string, tid string) (conn net
 	node = service.Node
 	cid = service.ID
 
+	timeout := d.timeout
+	if timeout <= 0 {
+		timeout = 30 * time.Second // Increased default from 15s to 30s for high load
+	}
+
 	dialer := net.Dialer{
-		Timeout: d.timeout,
+		Timeout: timeout,
 	}
 	conn, err = dialer.DialContext(ctx, "tcp", service.Address)
 	return

@@ -1,0 +1,140 @@
+# High Load Optimized Configuration for GOST
+# Apply this configuration to handle high traffic and prevent "host unreachable" errors
+
+services:
+  - name: http-proxy
+    addr: ":8080"
+    handler:
+      type: http
+      metadata:
+        readTimeout: 60s          # Increased timeout for slow connections
+        keepalive: true           # Enable connection reuse
+        observePeriod: 10s        # Monitor performance every 10s
+    listener:
+      type: tcp
+      metadata:
+        backlog: 2048            # High connection queue (default now 1024)
+        mptcp: true              # Enable multipath TCP
+    limiter: 
+      - conn-limiter             # Apply connection limits
+      - traffic-limiter          # Apply traffic limits
+
+  - name: socks5-proxy  
+    addr: ":1080"
+    handler:
+      type: socks5
+      metadata:
+        readTimeout: 60s
+    listener:
+      type: tcp
+      metadata:
+        backlog: 2048
+        mptcp: true
+    limiter:
+      - conn-limiter
+      - traffic-limiter
+
+  - name: tunnel-handler
+    addr: ":8443"
+    handler:
+      type: tunnel
+      metadata:
+        tunnel.timeout: 60s       # New configurable tunnel timeout
+        tunnel.retries: 5         # New configurable tunnel retries
+        tunnel.direct: false
+        sniffing: true
+        sniffing.timeout: 30s
+    listener:
+      type: tcp
+      metadata:
+        backlog: 2048
+
+  - name: metrics-server
+    addr: ":9090"
+    handler:
+      type: metrics
+      metadata:
+        path: /metrics
+
+chains:
+  - name: chain-socks
+    hops:
+      - name: hop-socks
+        addr: upstream-socks-proxy:1080
+        connector:
+          type: socks5
+          metadata:
+            connectTimeout: 30s    # Connection timeout to SOCKS proxy
+        dialer:
+          type: tcp
+          metadata:
+            timeout: 60s          # Overall operation timeout
+            retries: 5            # Retry failed connections
+
+  - name: chain-http
+    hops:
+      - name: hop-http
+        addr: upstream-http-proxy:8080
+        connector:
+          type: http
+          metadata:
+            readTimeout: 60s
+            keepalive: true
+        dialer:
+          type: tcp
+          metadata:
+            timeout: 60s
+            retries: 5
+
+# Connection and Traffic Limiters
+limiters:
+  - name: conn-limiter
+    type: conn
+    limits:
+      - "$": 50000             # Global: 50k concurrent connections
+      - "$$": 1000             # Per-IP: 1k concurrent connections
+      # Specific IP limits
+      - "192.168.1.0/24": 5000   # Local network: higher limit
+      - "10.0.0.0/8": 2000       # Private network: medium limit
+
+  - name: traffic-limiter  
+    type: traffic
+    limits:
+      - "$": "10GB"            # Global: 10GB/s traffic
+      - "$$": "500MB"          # Per-IP: 500MB/s traffic
+      # CIDR-based limits
+      - "192.168.1.0/24": "2GB"  # Local network: higher bandwidth
+      - "10.0.0.0/8": "1GB"      # Private network: medium bandwidth
+
+# API and Monitoring
+api:
+  addr: ":18080"
+  pathPrefix: /api
+  accesslog: true
+  
+# Prometheus metrics
+metrics:
+  addr: ":9090"
+  path: /metrics
+
+# Routing rules
+routers:
+  - name: router-0
+    default: true
+    routes:
+      - match:
+          - host: "*.example.com"
+        action: chain-http
+      - match:
+          - host: "*.proxy.com"  
+        action: chain-socks
+
+# Logging configuration
+log:
+  level: info
+  format: json
+  output: /var/log/gost/gost.log
+  rotation:
+    maxSize: 100MB
+    maxAge: 7
+    maxBackups: 10 

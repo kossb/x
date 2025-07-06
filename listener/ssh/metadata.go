@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultBacklog = 128
+	defaultBacklog = 1024  // Increased for high load scenarios
 )
 
 type metadata struct {
