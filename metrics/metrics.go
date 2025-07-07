@@ -27,6 +27,10 @@ const (
 	MetricChainErrorsCounter metrics.MetricName = "gost_chain_errors_total"
 	// Total recorder records. Labels: host, recorder.
 	MetricRecorderRecordsCounter metrics.MetricName = "gost_recorder_records_total"
+	// Total GRPC plugin requests. Labels: host, service, method, status_code.
+	MetricGRPCRequestsCounter metrics.MetricName = "gost_grpc_requests_total"
+	// GRPC plugin request duration histogram. Labels: host, service, method.
+	MetricGRPCRequestsDurationObserver metrics.MetricName = "gost_grpc_request_duration_seconds"
 )
 
 var (

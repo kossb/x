@@ -5,16 +5,20 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"time"
 
 	"github.com/go-gost/core/chain"
 	"github.com/go-gost/core/hop"
 	"github.com/go-gost/core/logger"
+	"github.com/go-gost/core/metrics"
 	"github.com/go-gost/plugin/hop/proto"
 	"github.com/go-gost/x/config"
 	node_parser "github.com/go-gost/x/config/parsing/node"
 	ctxvalue "github.com/go-gost/x/ctx"
 	"github.com/go-gost/x/internal/plugin"
+	xmetrics "github.com/go-gost/x/metrics"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 type grpcPlugin struct {
@@ -61,6 +65,9 @@ func (p *grpcPlugin) Select(ctx context.Context, opts ...hop.SelectOption) *chai
 		opt(&options)
 	}
 
+	// Start timing
+	start := time.Now()
+
 	r, err := p.client.Select(ctx,
 		&proto.SelectRequest{
 			Network: options.Network,
@@ -70,6 +77,39 @@ func (p *grpcPlugin) Select(ctx context.Context, opts ...hop.SelectOption) *chai
 			Client:  string(ctxvalue.ClientIDFromContext(ctx)),
 			Src:     string(ctxvalue.ClientAddrFromContext(ctx)),
 		})
+
+	// Record metrics
+	duration := time.Since(start).Seconds()
+	statusCode := "OK"
+	if err != nil {
+		if st, ok := status.FromError(err); ok {
+			statusCode = st.Code().String()
+		} else {
+			statusCode = "UNKNOWN"
+		}
+	}
+
+	// Record duration
+	if observer := xmetrics.GetObserver(
+		xmetrics.MetricGRPCRequestsDurationObserver,
+		metrics.Labels{
+			"service": "hopfinder",
+			"method":  "Select",
+		}); observer != nil {
+		observer.Observe(duration)
+	}
+
+	// Record request count with status
+	if counter := xmetrics.GetCounter(
+		xmetrics.MetricGRPCRequestsCounter,
+		metrics.Labels{
+			"service":     "hopfinder",
+			"method":      "Select",
+			"status_code": statusCode,
+		}); counter != nil {
+		counter.Inc()
+	}
+
 	if err != nil {
 		p.log.Error(err)
 		return nil

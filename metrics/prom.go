@@ -69,6 +69,12 @@ func NewMetrics() metrics.Metrics {
 					Help: "Total records written by recorder",
 				},
 				[]string{"host", "recorder"}),
+			MetricGRPCRequestsCounter: prometheus.NewCounterVec(
+				prometheus.CounterOpts{
+					Name: string(MetricGRPCRequestsCounter),
+					Help: "Total GRPC plugin requests",
+				},
+				[]string{"host", "service", "method", "status_code"}),
 		},
 		histograms: map[metrics.MetricName]*prometheus.HistogramVec{
 			MetricServiceRequestsDurationObserver: prometheus.NewHistogramVec(
@@ -89,6 +95,15 @@ func NewMetrics() metrics.Metrics {
 					},
 				},
 				[]string{"host", "chain", "node"}),
+			MetricGRPCRequestsDurationObserver: prometheus.NewHistogramVec(
+				prometheus.HistogramOpts{
+					Name: string(MetricGRPCRequestsDurationObserver),
+					Help: "Distribution of GRPC plugin request latencies",
+					Buckets: []float64{
+						.001, .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 15, 30,
+					},
+				},
+				[]string{"host", "service", "method"}),
 		},
 	}
 	for k := range m.gauges {

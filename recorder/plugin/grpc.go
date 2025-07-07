@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"time"
 
 	"github.com/go-gost/core/logger"
+	"github.com/go-gost/core/metrics"
 	"github.com/go-gost/core/recorder"
 	"github.com/go-gost/plugin/recorder/proto"
 	"github.com/go-gost/x/internal/plugin"
+	xmetrics "github.com/go-gost/x/metrics"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 type grpcPlugin struct {
@@ -57,11 +61,47 @@ func (p *grpcPlugin) Record(ctx context.Context, b []byte, opts ...recorder.Reco
 
 	md, _ := json.Marshal(options.Metadata)
 
+	// Start timing
+	start := time.Now()
+
 	reply, err := p.client.Record(ctx,
 		&proto.RecordRequest{
 			Data:     b,
 			Metadata: md,
 		})
+
+	// Record metrics
+	duration := time.Since(start).Seconds()
+	statusCode := "OK"
+	if err != nil {
+		if st, ok := status.FromError(err); ok {
+			statusCode = st.Code().String()
+		} else {
+			statusCode = "UNKNOWN"
+		}
+	}
+
+	// Record duration
+	if observer := xmetrics.GetObserver(
+		xmetrics.MetricGRPCRequestsDurationObserver,
+		metrics.Labels{
+			"service": "recorder",
+			"method":  "Record",
+		}); observer != nil {
+		observer.Observe(duration)
+	}
+
+	// Record request count with status
+	if counter := xmetrics.GetCounter(
+		xmetrics.MetricGRPCRequestsCounter,
+		metrics.Labels{
+			"service":     "recorder",
+			"method":      "Record",
+			"status_code": statusCode,
+		}); counter != nil {
+		counter.Inc()
+	}
+
 	if err != nil {
 		p.log.Error(err)
 		return err
