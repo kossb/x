@@ -54,7 +54,7 @@ func (c *TTFBConn) Read(b []byte) (n int, err error) {
 		c.mu.Unlock()
 
 		if c.logger != nil {
-			c.logger.Debugf("TTFB from proxy %s (%s): %v",
+			c.logger.Debugf("TTFB connection from proxy %s (%s): %v",
 				c.Conn.RemoteAddr().String(),
 				c.connectorType,
 				time.Since(c.startTime))
@@ -73,6 +73,27 @@ func (c *TTFBConn) Write(b []byte) (n int, err error) {
 	c.mu.Unlock()
 
 	return c.Conn.Write(b)
+}
+
+func (c *TTFBConn) Close() error {
+	// Record round trip time from connection start to close
+	if observer := xmetrics.GetObserver(
+		xmetrics.MetricProxyNodeRoundTripObserver,
+		metrics.Labels{
+			"node":           c.Conn.RemoteAddr().String(),
+			"connector_type": c.connectorType,
+		}); observer != nil {
+		observer.Observe(time.Since(c.startTime).Seconds())
+	}
+
+	if c.logger != nil {
+		c.logger.Debugf("Round trip to proxy %s (%s): %v",
+			c.Conn.RemoteAddr().String(),
+			c.connectorType,
+			time.Since(c.startTime))
+	}
+
+	return c.Conn.Close()
 }
 
 // IsTTFBMeasured returns true if TTFB has been measured

@@ -113,6 +113,24 @@ func NewMetrics() metrics.Metrics {
 					},
 				},
 				[]string{"host", "node", "connector_type"}),
+			MetricProxyNodeRoundTripObserver: prometheus.NewHistogramVec(
+				prometheus.HistogramOpts{
+					Name: string(MetricProxyNodeRoundTripObserver),
+					Help: "Distribution of complete round trip time for proxy node connections",
+					Buckets: []float64{
+						.001, .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 30, 60, 120,
+					},
+				},
+				[]string{"host", "node", "connector_type"}),
+			MetricTransportTTFBObserver: prometheus.NewHistogramVec(
+				prometheus.HistogramOpts{
+					Name: string(MetricTransportTTFBObserver),
+					Help: "Distribution of time to first byte in transport layer data copying",
+					Buckets: []float64{
+						.0001, .0005, .001, .002, .005, .01, .02, .05, .1, .2, .5, 1, 2, 5,
+					},
+				},
+				[]string{"host", "direction"}),
 		},
 	}
 	for k := range m.gauges {

@@ -80,6 +80,7 @@ func (p *grpcPlugin) Select(ctx context.Context, opts ...hop.SelectOption) *chai
 
 	// Record metrics
 	duration := time.Since(start).Seconds()
+	p.log.Debugf("GRPC hopfinder request duration: %v", duration)
 	statusCode := "OK"
 	if err != nil {
 		if st, ok := status.FromError(err); ok {

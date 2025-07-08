@@ -76,6 +76,7 @@ func (p *grpcPlugin) Authenticate(ctx context.Context, user, password string, op
 
 	// Record metrics
 	duration := time.Since(start).Seconds()
+	p.log.Debugf("GRPC auth request duration: %v", duration)
 	statusCode := "OK"
 	if err != nil {
 		if st, ok := status.FromError(err); ok {

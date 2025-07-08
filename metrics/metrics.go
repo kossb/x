@@ -33,6 +33,10 @@ const (
 	MetricGRPCRequestsDurationObserver metrics.MetricName = "gost_grpc_request_duration_seconds"
 	// Time to first byte from proxy node histogram. Labels: host, node, connector_type.
 	MetricProxyNodeTTFBObserver metrics.MetricName = "gost_proxy_node_ttfb_seconds"
+	// Proxy node round trip time histogram. Labels: host, node, connector_type.
+	MetricProxyNodeRoundTripObserver metrics.MetricName = "gost_proxy_node_roundtrip_seconds"
+	// Transport layer time to first byte histogram. Labels: host, direction.
+	MetricTransportTTFBObserver metrics.MetricName = "gost_transport_ttfb_seconds"
 )
 
 var (
