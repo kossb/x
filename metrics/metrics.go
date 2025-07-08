@@ -31,6 +31,8 @@ const (
 	MetricGRPCRequestsCounter metrics.MetricName = "gost_grpc_requests_total"
 	// GRPC plugin request duration histogram. Labels: host, service, method.
 	MetricGRPCRequestsDurationObserver metrics.MetricName = "gost_grpc_request_duration_seconds"
+	// Time to first byte from proxy node histogram. Labels: host, node, connector_type.
+	MetricProxyNodeTTFBObserver metrics.MetricName = "gost_proxy_node_ttfb_seconds"
 )
 
 var (

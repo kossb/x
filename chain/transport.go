@@ -3,11 +3,15 @@ package chain
 import (
 	"context"
 	"net"
+	"reflect"
+	"strings"
 
 	"github.com/go-gost/core/chain"
 	"github.com/go-gost/core/connector"
 	"github.com/go-gost/core/dialer"
+	"github.com/go-gost/core/logger"
 	net_dialer "github.com/go-gost/x/internal/net/dialer"
+	proxy_sniffer "github.com/go-gost/x/internal/util/proxy"
 )
 
 type Transport struct {
@@ -73,9 +77,33 @@ func (tr *Transport) Connect(ctx context.Context, conn net.Conn, network, addres
 	if tr.options.SockOpts != nil {
 		netd.Mark = tr.options.SockOpts.Mark
 	}
-	return tr.connector.Connect(ctx, conn, network, address,
+
+	// Determine connector type for TTFB measurement using reflection
+	connectorType := "unknown"
+	if tr.connector != nil {
+		typeName := reflect.TypeOf(tr.connector).String()
+		// Extract the package and type name (e.g., "*http.httpConnector" -> "http")
+		if idx := strings.LastIndex(typeName, "."); idx > 0 {
+			if idx2 := strings.LastIndex(typeName[:idx], "."); idx2 > 0 {
+				connectorType = typeName[idx2+1 : idx]
+			}
+		}
+	}
+
+	// Wrap connection with TTFB sniffer for proxy node measurement
+	wrappedConn := proxy_sniffer.WrapConnection(conn, connectorType, logger.Default())
+
+	result, err := tr.connector.Connect(ctx, wrappedConn, network, address,
 		connector.DialerConnectOption(netd),
 	)
+
+	// If connection failed, return the original error
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the result connection (which may be further wrapped by the connector)
+	return result, nil
 }
 
 func (tr *Transport) Bind(ctx context.Context, conn net.Conn, network, address string, opts ...connector.BindOption) (net.Listener, error) {

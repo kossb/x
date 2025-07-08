@@ -104,6 +104,15 @@ func NewMetrics() metrics.Metrics {
 					},
 				},
 				[]string{"host", "service", "method"}),
+			MetricProxyNodeTTFBObserver: prometheus.NewHistogramVec(
+				prometheus.HistogramOpts{
+					Name: string(MetricProxyNodeTTFBObserver),
+					Help: "Distribution of time to first byte from proxy nodes",
+					Buckets: []float64{
+						.001, .002, .005, .01, .02, .05, .1, .2, .5, 1, 2, 5, 10, 30,
+					},
+				},
+				[]string{"host", "node", "connector_type"}),
 		},
 	}
 	for k := range m.gauges {
