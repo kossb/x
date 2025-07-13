@@ -10,6 +10,7 @@ import (
 	"github.com/go-gost/gosocks5"
 	ctxvalue "github.com/go-gost/x/ctx"
 	"github.com/go-gost/x/internal/util/socks"
+	stats_wrapper "github.com/go-gost/x/observer/stats/wrapper"
 )
 
 type serverSelector struct {
@@ -73,6 +74,7 @@ func (s *serverSelector) OnSelected(method uint8, conn net.Conn) (string, net.Co
 			ctx := ctxvalue.ContextWithClientAddr(context.Background(), ctxvalue.ClientAddr(conn.RemoteAddr().String()))
 			ctx = ctxvalue.ContextWithHandler(ctx, ctxvalue.Handler("socks5"))
 			id, ok = s.Authenticator.Authenticate(ctx, req.Username, req.Password)
+			stats_wrapper.SetAuthKey(conn, req.Username)
 			if !ok {
 				resp := gosocks5.NewUserPassResponse(gosocks5.UserPassVer, gosocks5.Failure)
 				if err := resp.Write(conn); err != nil {

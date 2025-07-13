@@ -111,6 +111,7 @@ func (h *socks5Handler) Handle(ctx context.Context, conn net.Conn, opts ...handl
 		LocalAddr:  conn.LocalAddr().String(),
 		Time:       start,
 		SID:        string(ctxvalue.SidFromContext(ctx)),
+		Proto:      "socks5",
 	}
 
 	ro.ClientIP = conn.RemoteAddr().String()
@@ -122,10 +123,11 @@ func (h *socks5Handler) Handle(ctx context.Context, conn net.Conn, opts ...handl
 	}
 
 	log := h.options.Logger.WithFields(map[string]any{
-		"remote": conn.RemoteAddr().String(),
-		"local":  conn.LocalAddr().String(),
-		"sid":    ctxvalue.SidFromContext(ctx),
-		"client": ro.ClientIP,
+		"remote":   conn.RemoteAddr().String(),
+		"local":    conn.LocalAddr().String(),
+		"sid":      ctxvalue.SidFromContext(ctx),
+		"client":   ro.ClientIP,
+		"clientID": ro.ClientID,
 	})
 	log.Infof("%s <> %s", conn.RemoteAddr(), conn.LocalAddr())
 
@@ -166,8 +168,8 @@ func (h *socks5Handler) Handle(ctx context.Context, conn net.Conn, opts ...handl
 
 	if clientID := sc.ID(); clientID != "" {
 		ctx = ctxvalue.ContextWithClientID(ctx, ctxvalue.ClientID(clientID))
-		log = log.WithFields(map[string]any{"user": clientID})
-		ro.ClientID = clientID
+		ro.ClientID = stats_wrapper.GetAuthKey(conn)
+		log = log.WithFields(map[string]any{"user": ro.ClientID})
 	}
 
 	conn = sc

@@ -24,9 +24,10 @@ import (
 
 func (h *socks5Handler) handleConnect(ctx context.Context, conn net.Conn, network, address string, ro *xrecorder.HandlerRecorderObject, log logger.Logger) error {
 	log = log.WithFields(map[string]any{
-		"dst":  fmt.Sprintf("%s/%s", address, network),
-		"cmd":  "connect",
-		"host": address,
+		"dst":      fmt.Sprintf("%s/%s", address, network),
+		"cmd":      "connect",
+		"host":     address,
+		"clientID": ro.ClientID,
 	})
 	log.Debugf("%s >> %s", conn.RemoteAddr(), address)
 

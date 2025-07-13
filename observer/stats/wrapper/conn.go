@@ -19,9 +19,10 @@ var (
 
 type conn struct {
 	net.Conn
-	stats  stats.Stats
-	closed chan struct{}
-	mu     sync.Mutex
+	stats   stats.Stats
+	closed  chan struct{}
+	mu      sync.Mutex
+	authKey string
 }
 
 func WrapConn(c net.Conn, pStats stats.Stats) net.Conn {
@@ -36,6 +37,19 @@ func WrapConn(c net.Conn, pStats stats.Stats) net.Conn {
 		Conn:   c,
 		stats:  pStats,
 		closed: make(chan struct{}),
+	}
+}
+
+func GetAuthKey(c net.Conn) string {
+	if c, ok := c.(*conn); ok {
+		return c.authKey
+	}
+	return ""
+}
+
+func SetAuthKey(c net.Conn, authKey string) {
+	if c, ok := c.(*conn); ok {
+		c.authKey = authKey
 	}
 }
 
