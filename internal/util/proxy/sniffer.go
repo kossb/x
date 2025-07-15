@@ -43,7 +43,6 @@ func (c *TTFBConn) Read(b []byte) (n int, err error) {
 		if observer := xmetrics.GetObserver(
 			xmetrics.MetricProxyNodeTTFBObserver,
 			metrics.Labels{
-				"node":           c.Conn.RemoteAddr().String(),
 				"connector_type": c.connectorType,
 			}); observer != nil {
 			observer.Observe(time.Since(c.startTime).Seconds())
@@ -80,7 +79,6 @@ func (c *TTFBConn) Close() error {
 	if observer := xmetrics.GetObserver(
 		xmetrics.MetricProxyNodeRoundTripObserver,
 		metrics.Labels{
-			"node":           c.Conn.RemoteAddr().String(),
 			"connector_type": c.connectorType,
 		}); observer != nil {
 		observer.Observe(time.Since(c.startTime).Seconds())

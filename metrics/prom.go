@@ -62,7 +62,7 @@ func NewMetrics() metrics.Metrics {
 					Name: string(MetricChainErrorsCounter),
 					Help: "Total chain errors",
 				},
-				[]string{"host", "chain", "node"}),
+				[]string{"host", "chain"}),
 			MetricRecorderRecordsCounter: prometheus.NewCounterVec(
 				prometheus.CounterOpts{
 					Name: string(MetricRecorderRecordsCounter),
@@ -94,7 +94,7 @@ func NewMetrics() metrics.Metrics {
 						.01, .05, .1, .25, .5, 1, 1.5, 2, 5, 10, 15, 30, 60,
 					},
 				},
-				[]string{"host", "chain", "node"}),
+				[]string{"host", "chain"}),
 			MetricGRPCRequestsDurationObserver: prometheus.NewHistogramVec(
 				prometheus.HistogramOpts{
 					Name: string(MetricGRPCRequestsDurationObserver),
@@ -112,7 +112,7 @@ func NewMetrics() metrics.Metrics {
 						.001, .002, .005, .01, .02, .05, .1, .2, .5, 1, 2, 5, 10, 30,
 					},
 				},
-				[]string{"host", "node", "connector_type"}),
+				[]string{"host", "connector_type"}),
 			MetricProxyNodeRoundTripObserver: prometheus.NewHistogramVec(
 				prometheus.HistogramOpts{
 					Name: string(MetricProxyNodeRoundTripObserver),
@@ -121,7 +121,7 @@ func NewMetrics() metrics.Metrics {
 						.001, .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 30, 60, 120,
 					},
 				},
-				[]string{"host", "node", "connector_type"}),
+				[]string{"host", "connector_type"}),
 			MetricTransportTTFBObserver: prometheus.NewHistogramVec(
 				prometheus.HistogramOpts{
 					Name: string(MetricTransportTTFBObserver),

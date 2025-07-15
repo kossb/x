@@ -205,7 +205,7 @@ func (r *chainRoute) connect(ctx context.Context, logger logger.Logger) (conn ne
 					marker.Mark()
 				}
 				if v := xmetrics.GetCounter(xmetrics.MetricChainErrorsCounter,
-					metrics.Labels{"chain": name, "node": node.Name}); v != nil {
+					metrics.Labels{"chain": name}); v != nil { //"node": node.Name
 					v.Inc()
 				}
 				return
@@ -253,7 +253,7 @@ func (r *chainRoute) connect(ctx context.Context, logger logger.Logger) (conn ne
 			name = cn.Name()
 		}
 		if v := xmetrics.GetObserver(xmetrics.MetricNodeConnectDurationObserver,
-			metrics.Labels{"chain": name, "node": node.Name}); v != nil {
+			metrics.Labels{"chain": name}); v != nil {
 			v.Observe(time.Since(start).Seconds())
 		}
 	}
