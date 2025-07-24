@@ -3,6 +3,7 @@ package chain
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -223,11 +224,23 @@ type packetConn struct {
 }
 
 func (c *packetConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
+	if c.Conn == nil {
+		return 0, nil, errors.New("connection is nil")
+	}
+
 	n, err = c.Read(b)
+	if err != nil {
+		return n, nil, err
+	}
+
 	addr = c.Conn.RemoteAddr()
 	return
 }
 
 func (c *packetConn) WriteTo(b []byte, addr net.Addr) (n int, err error) {
+	if c.Conn == nil {
+		return 0, errors.New("connection is nil")
+	}
+
 	return c.Write(b)
 }

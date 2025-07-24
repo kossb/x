@@ -2,6 +2,7 @@ package udp
 
 import (
 	"context"
+	"errors"
 	"math"
 	"net"
 
@@ -39,12 +40,20 @@ func (r *Relay) WithLogger(logger logger.Logger) *Relay {
 }
 
 func (r *Relay) Run(ctx context.Context) (err error) {
+	if r.pc1 == nil || r.pc2 == nil {
+		return errors.New("relay: packet connections cannot be nil")
+	}
+
 	errc := make(chan error, 2)
 
 	go func() {
 		var b [MaxMessageSize]byte
 		for {
 			err := func() error {
+				if r.pc1 == nil {
+					return errors.New("pc1 connection is nil")
+				}
+
 				n, raddr, err := r.pc1.ReadFrom(b[:])
 				if err != nil {
 					return err
@@ -55,6 +64,10 @@ func (r *Relay) Run(ctx context.Context) (err error) {
 						r.logger.Warn("bypass: ", raddr)
 					}
 					return nil
+				}
+
+				if r.pc2 == nil {
+					return errors.New("pc2 connection is nil")
 				}
 
 				if _, err := r.pc2.WriteTo(b[:n], raddr); err != nil {
@@ -81,6 +94,10 @@ func (r *Relay) Run(ctx context.Context) (err error) {
 		var b [MaxMessageSize]byte
 		for {
 			err := func() error {
+				if r.pc2 == nil {
+					return errors.New("pc2 connection is nil")
+				}
+
 				n, raddr, err := r.pc2.ReadFrom(b[:])
 				if err != nil {
 					return err
@@ -91,6 +108,10 @@ func (r *Relay) Run(ctx context.Context) (err error) {
 						r.logger.Warn("bypass: ", raddr)
 					}
 					return nil
+				}
+
+				if r.pc1 == nil {
+					return errors.New("pc1 connection is nil")
 				}
 
 				if _, err := r.pc1.WriteTo(b[:n], raddr); err != nil {
