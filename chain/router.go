@@ -62,6 +62,9 @@ func (r *Router) Dial(ctx context.Context, network, address string) (conn net.Co
 
 	if network == "udp" || network == "udp4" || network == "udp6" {
 		if _, ok := conn.(net.PacketConn); !ok {
+			if conn == nil {
+				return nil, errors.New("connection is nil")
+			}
 			return &packetConn{conn}, nil
 		}
 	}
@@ -243,4 +246,44 @@ func (c *packetConn) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 	}
 
 	return c.Write(b)
+}
+
+func (c *packetConn) Close() error {
+	if c.Conn == nil {
+		return nil // Already closed or never initialized
+	}
+
+	return c.Conn.Close()
+}
+
+func (c *packetConn) LocalAddr() net.Addr {
+	if c.Conn == nil {
+		return nil
+	}
+
+	return c.Conn.LocalAddr()
+}
+
+func (c *packetConn) RemoteAddr() net.Addr {
+	if c.Conn == nil {
+		return nil
+	}
+
+	return c.Conn.RemoteAddr()
+}
+
+func (c *packetConn) Read(b []byte) (n int, err error) {
+	if c.Conn == nil {
+		return 0, errors.New("connection is nil")
+	}
+
+	return c.Conn.Read(b)
+}
+
+func (c *packetConn) Write(b []byte) (n int, err error) {
+	if c.Conn == nil {
+		return 0, errors.New("connection is nil")
+	}
+
+	return c.Conn.Write(b)
 }
