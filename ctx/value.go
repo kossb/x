@@ -80,6 +80,37 @@ func HandlerFromContext(ctx context.Context) Handler {
 	return v
 }
 
+type localAddrKey struct{}
+type LocalAddr string
+
+var (
+	keyLocalAddr = &localAddrKey{}
+)
+
+func ContextWithLocalAddr(ctx context.Context, addr LocalAddr) context.Context {
+	return context.WithValue(ctx, keyLocalAddr, addr)
+}
+
+func LocalAddrFromContext(ctx context.Context) LocalAddr {
+	v, _ := ctx.Value(keyLocalAddr).(LocalAddr)
+	return v
+}
+
+type serviceKey struct{}
+type Service string
+
+var (
+	keyService = &serviceKey{}
+)
+
+func ContextWithService(ctx context.Context, service Service) context.Context {
+	return context.WithValue(ctx, keyService, service)
+}
+func ServiceFromContext(ctx context.Context) Service {
+	v, _ := ctx.Value(keyService).(Service)
+	return v
+}
+
 type clientIDKey struct{}
 type ClientID string
 

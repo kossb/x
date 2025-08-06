@@ -110,6 +110,9 @@ func (h *http2Handler) Handle(ctx context.Context, conn net.Conn, opts ...handle
 	}
 	ro.ClientIP, _, _ = net.SplitHostPort(conn.RemoteAddr().String())
 
+	ctx = ctxvalue.ContextWithLocalAddr(ctx, ctxvalue.LocalAddr(conn.LocalAddr().String()))
+	ctx = ctxvalue.ContextWithService(ctx, ctxvalue.Service(h.options.Service))
+
 	log := h.options.Logger.WithFields(map[string]any{
 		"remote": conn.RemoteAddr().String(),
 		"local":  conn.LocalAddr().String(),

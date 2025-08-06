@@ -122,6 +122,9 @@ func (h *socks5Handler) Handle(ctx context.Context, conn net.Conn, opts ...handl
 		ro.ClientIP = h
 	}
 
+	ctx = ctxvalue.ContextWithLocalAddr(ctx, ctxvalue.LocalAddr(conn.LocalAddr().String()))
+	ctx = ctxvalue.ContextWithService(ctx, ctxvalue.Service(h.options.Service))
+
 	log := h.options.Logger.WithFields(map[string]any{
 		"remote":   conn.RemoteAddr().String(),
 		"local":    conn.LocalAddr().String(),

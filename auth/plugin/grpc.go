@@ -56,11 +56,24 @@ func (p *grpcPlugin) Authenticate(ctx context.Context, user, password string, op
 		return "", false
 	}
 
+	md := metadata.New(map[string]string{})
+
 	handler := ctxvalue.HandlerFromContext(ctx)
 	if handler != "" {
-		md := metadata.New(map[string]string{
-			"handler-type": string(handler),
-		})
+		md.Set("handler-type", string(handler))
+	}
+
+	localAddr := ctxvalue.LocalAddrFromContext(ctx)
+	if localAddr != "" {
+		md.Set("local-addr", string(localAddr))
+	}
+
+	service := ctxvalue.ServiceFromContext(ctx)
+	if service != "" {
+		md.Set("service-name", string(service))
+	}
+
+	if md.Len() > 0 {
 		ctx = metadata.NewOutgoingContext(ctx, md)
 	}
 
