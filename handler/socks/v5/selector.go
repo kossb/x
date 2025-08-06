@@ -73,6 +73,7 @@ func (s *serverSelector) OnSelected(method uint8, conn net.Conn) (string, net.Co
 			var ok bool
 			ctx := ctxvalue.ContextWithClientAddr(context.Background(), ctxvalue.ClientAddr(conn.RemoteAddr().String()))
 			ctx = ctxvalue.ContextWithHandler(ctx, ctxvalue.Handler("socks5"))
+			ctx = ctxvalue.ContextWithLocalAddr(ctx, ctxvalue.LocalAddr(conn.LocalAddr().String()))
 			id, ok = s.Authenticator.Authenticate(ctx, req.Username, req.Password)
 			stats_wrapper.SetAuthKey(conn, req.Username)
 			if !ok {
