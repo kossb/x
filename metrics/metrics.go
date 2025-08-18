@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"strings"
 	"sync/atomic"
 
 	"github.com/go-gost/core/metrics"
@@ -53,6 +54,13 @@ func IsEnabled() bool {
 }
 
 func GetCounter(name metrics.MetricName, labels metrics.Labels) metrics.Counter {
+	if service, ok := labels["service"]; ok {
+		paths := strings.Split(service, "-")
+		if len(paths) >= 3 {
+			labels["service"] = strings.Join(paths[:3], "-")
+		}
+	}
+
 	if IsEnabled() {
 		return defaultMetrics.Counter(name, labels)
 	}
@@ -60,6 +68,12 @@ func GetCounter(name metrics.MetricName, labels metrics.Labels) metrics.Counter 
 }
 
 func GetGauge(name metrics.MetricName, labels metrics.Labels) metrics.Gauge {
+	if service, ok := labels["service"]; ok {
+		paths := strings.Split(service, "-")
+		if len(paths) >= 3 {
+			labels["service"] = strings.Join(paths[:3], "-")
+		}
+	}
 	if IsEnabled() {
 		return defaultMetrics.Gauge(name, labels)
 	}
@@ -67,6 +81,12 @@ func GetGauge(name metrics.MetricName, labels metrics.Labels) metrics.Gauge {
 }
 
 func GetObserver(name metrics.MetricName, labels metrics.Labels) metrics.Observer {
+	if service, ok := labels["service"]; ok {
+		paths := strings.Split(service, "-")
+		if len(paths) >= 3 {
+			labels["service"] = strings.Join(paths[:3], "-")
+		}
+	}
 	if IsEnabled() {
 		return defaultMetrics.Observer(name, labels)
 	}
