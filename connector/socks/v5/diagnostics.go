@@ -27,7 +27,6 @@ func DiagnoseSocks5Error(replyCode uint8, target, network string) *DiagnosticInf
 		Network:      network,
 		ReplyCode:    replyCode,
 		ReplyCodeHex: fmt.Sprintf("0x%02x", replyCode),
-		ErrorMessage: socks5ReplyError(replyCode).Error(),
 	}
 
 	switch replyCode {

@@ -8,11 +8,8 @@ import (
 )
 
 type metadata struct {
-	connectTimeout    time.Duration
-	disable4a         bool
-	retryMaxAttempts  int
-	retryInitialDelay time.Duration
-	retryMaxDelay     time.Duration
+	connectTimeout time.Duration
+	disable4a      bool
 }
 
 func (c *socks4Connector) parseMetadata(md mdata.Metadata) (err error) {
@@ -23,11 +20,6 @@ func (c *socks4Connector) parseMetadata(md mdata.Metadata) (err error) {
 
 	c.md.connectTimeout = mdutil.GetDuration(md, connectTimeout)
 	c.md.disable4a = mdutil.GetBool(md, disable4a)
-
-	// Parse retry configuration
-	c.md.retryMaxAttempts = mdutil.GetInt(md, "retry.maxAttempts", "retryMaxAttempts")
-	c.md.retryInitialDelay = mdutil.GetDuration(md, "retry.initialDelay", "retryInitialDelay")
-	c.md.retryMaxDelay = mdutil.GetDuration(md, "retry.maxDelay", "retryMaxDelay")
 
 	return
 }

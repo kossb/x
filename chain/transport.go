@@ -2,16 +2,13 @@ package chain
 
 import (
 	"context"
-	"net"
-	"reflect"
-	"strings"
-
 	"github.com/go-gost/core/chain"
 	"github.com/go-gost/core/connector"
 	"github.com/go-gost/core/dialer"
 	"github.com/go-gost/core/logger"
 	net_dialer "github.com/go-gost/x/internal/net/dialer"
 	proxy_sniffer "github.com/go-gost/x/internal/util/proxy"
+	"net"
 )
 
 type Transport struct {
@@ -80,15 +77,6 @@ func (tr *Transport) Connect(ctx context.Context, conn net.Conn, network, addres
 
 	// Determine connector type for TTFB measurement using reflection
 	connectorType := "unknown"
-	if tr.connector != nil {
-		typeName := reflect.TypeOf(tr.connector).String()
-		// Extract the package and type name (e.g., "*http.httpConnector" -> "http")
-		if idx := strings.LastIndex(typeName, "."); idx > 0 {
-			if idx2 := strings.LastIndex(typeName[:idx], "."); idx2 > 0 {
-				connectorType = typeName[idx2+1 : idx]
-			}
-		}
-	}
 
 	// Wrap connection with TTFB sniffer for proxy node measurement
 	wrappedConn := proxy_sniffer.WrapConnection(conn, connectorType, logger.Default())
